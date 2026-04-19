@@ -3,12 +3,16 @@ variable "name" {
 }
 
 variable "username" {
+  type = string
 }
 
 variable "password" {
+  type      = string
+  sensitive = true
 }
 
 variable "hostname" {
+  type = string
 }
 
 variable "capability_tags" {
