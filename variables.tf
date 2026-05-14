@@ -1,18 +1,22 @@
 variable "name" {
-  type = string
+  type        = string
+  description = "The name of the NSX-T cloud account"
 }
 
 variable "username" {
-  type = string
+  type        = string
+  description = "The username for the NSX-T service account"
 }
 
 variable "password" {
-  type      = string
-  sensitive = true
+  type        = string
+  sensitive   = true
+  description = "The password for the NSX-T service account"
 }
 
 variable "hostname" {
-  type = string
+  type        = string
+  description = "The FQDN of the NSX-T manager"
 }
 
 variable "capability_tags" {
@@ -23,6 +27,7 @@ variable "capability_tags" {
 
 
 variable "description" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
+  description = "A description for the cloud account"
 }
