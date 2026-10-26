@@ -4,12 +4,12 @@ resource "vra_cloud_account_nsxt" "this" {
   username                = var.username
   password                = var.password
   hostname                = var.hostname
-  accept_self_signed_cert = true
+  accept_self_signed_cert = var.accept_self_signed_cert
   dynamic "tags" {
     for_each = var.capability_tags
     content {
-      key   = tags.value["key"]
-      value = tags.value["value"]
+      key   = tags.value.key
+      value = tags.value.value
     }
   }
 }

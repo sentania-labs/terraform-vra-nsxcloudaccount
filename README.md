@@ -21,6 +21,32 @@ module "nsx_cloud_account" {
 
 See `examples/` for a complete working configuration.
 
+## Security
+
+### TLS verification
+
+By default (`accept_self_signed_cert = false`) vRA verifies the NSX-T manager's TLS certificate, so the manager must present a certificate vRA already trusts (for example one issued by a CA in vRA's trust store). Before this input existed the module always set `accept_self_signed_cert = true`.
+
+Set `accept_self_signed_cert = true` only for managers that present a self-signed or otherwise untrusted certificate. vRA then accepts whatever certificate is presented, so the connection, including the service account credentials sent over it, is open to man-in-the-middle impersonation. Prefer installing a trusted certificate on the manager.
+
+### Credentials
+
+- `password` is marked `sensitive`, but it is still stored in Terraform state. Keep state in an encrypted backend with restricted access.
+- Do not put credentials in committed `.tfvars` files; pass them through environment variables (`TF_VAR_password`) or a secrets manager.
+- Use a dedicated, least-privilege NSX-T service account.
+
+### Input validation
+
+`username` and `password` must be non-empty, `hostname` must be a bare FQDN (trailing dot allowed) or an IPv4 or IPv6 address (IPv6 bare or bracketed) with no scheme, port, or path, and `capability_tags` must be objects with a non-empty `key` and a `value`. The same `key` may appear more than once with different values. Malformed values fail at plan time. Validation messages never include the password.
+
+### Upgrading
+
+`accept_self_signed_cert` now defaults to `false`; consumers relying on a self-signed manager certificate must set it to `true` explicitly. `capability_tags` changed from `list(map(string))` to `list(object({ key = string, value = string }))`; extra keys on a tag are silently ignored, and a missing `key` or `value` fails at plan time.
+
+## Tests
+
+`terraform test` runs mocked-provider tests (`tests/`) covering both TLS modes, tag handling, input validation, and that the password never appears in outputs. No vRA connection or credentials are needed.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -49,9 +75,10 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_capability_tags"></a> [capability\_tags](#input\_capability\_tags) | Capability tags to be applied to the Cloud Account | `list(map(string))` | `[]` | no |
+| <a name="input_accept_self_signed_cert"></a> [accept\_self\_signed\_cert](#input\_accept\_self\_signed\_cert) | Whether vRA should accept a self-signed or otherwise untrusted TLS certificate from the NSX-T manager. Defaults to false so the certificate is verified; set to true only for managers that present a certificate vRA does not trust, which leaves the connection open to impersonation. | `bool` | `false` | no |
+| <a name="input_capability_tags"></a> [capability\_tags](#input\_capability\_tags) | Capability tags to be applied to the Cloud Account | <pre>list(object({<br/>    key   = string<br/>    value = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_description"></a> [description](#input\_description) | A description for the cloud account | `string` | `""` | no |
-| <a name="input_hostname"></a> [hostname](#input\_hostname) | The FQDN of the NSX-T manager | `string` | n/a | yes |
+| <a name="input_hostname"></a> [hostname](#input\_hostname) | The FQDN, IPv4 address, or IPv6 address (bare or bracketed) of the NSX-T manager, without a URL scheme, port, or path | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | The name of the NSX-T cloud account | `string` | n/a | yes |
 | <a name="input_password"></a> [password](#input\_password) | The password for the NSX-T service account | `string` | n/a | yes |
 | <a name="input_username"></a> [username](#input\_username) | The username for the NSX-T service account | `string` | n/a | yes |
