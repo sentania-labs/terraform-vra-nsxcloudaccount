@@ -35,13 +35,14 @@ run "capability_tags_are_applied" {
   variables {
     capability_tags = [
       { key = "cloud", value = "nsx" },
-      { key = "env" },
+      { key = "region", value = "us" },
+      { key = "region", value = "eu" },
     ]
   }
 
   assert {
-    condition     = length(vra_cloud_account_nsxt.this.tags) == 2
-    error_message = "Both capability tags must be applied."
+    condition     = length(vra_cloud_account_nsxt.this.tags) == 3
+    error_message = "All capability tags, including same-key pairs, must be applied."
   }
 }
 
@@ -55,16 +56,6 @@ run "empty_tag_key_rejected" {
   expect_failures = [var.capability_tags]
 }
 
-run "duplicate_tag_keys_rejected" {
-  command = plan
-
-  variables {
-    capability_tags = [{ key = "a", value = "1" }, { key = "a", value = "2" }]
-  }
-
-  expect_failures = [var.capability_tags]
-}
-
 run "hostname_with_scheme_rejected" {
   command = plan
 
@@ -73,6 +64,78 @@ run "hostname_with_scheme_rejected" {
   }
 
   expect_failures = [var.hostname]
+}
+
+run "hostname_with_port_rejected" {
+  command = plan
+
+  variables {
+    hostname = "nsxmgr01.example.com:443"
+  }
+
+  expect_failures = [var.hostname]
+}
+
+run "hostname_ipv4_accepted" {
+  command = plan
+
+  variables {
+    hostname = "192.0.2.10"
+  }
+
+  assert {
+    condition     = vra_cloud_account_nsxt.this.hostname == "192.0.2.10"
+    error_message = "An IPv4 address must be accepted as hostname."
+  }
+}
+
+run "hostname_bare_ipv6_accepted" {
+  command = plan
+
+  variables {
+    hostname = "2001:db8::10"
+  }
+
+  assert {
+    condition     = vra_cloud_account_nsxt.this.hostname == "2001:db8::10"
+    error_message = "A bare IPv6 literal must be accepted as hostname."
+  }
+}
+
+run "hostname_bracketed_ipv6_accepted" {
+  command = plan
+
+  variables {
+    hostname = "[2001:db8::10]"
+  }
+
+  assert {
+    condition     = vra_cloud_account_nsxt.this.hostname == "[2001:db8::10]"
+    error_message = "A bracketed IPv6 literal must be accepted as hostname."
+  }
+}
+
+run "hostname_malformed_ipv6_rejected" {
+  command = plan
+
+  variables {
+    hostname = "[2001:db8::10"
+  }
+
+  expect_failures = [var.hostname]
+}
+
+run "hostname_trailing_dot_fqdn_accepted" {
+  command = plan
+
+  variables {
+    hostname = "nsxmgr01.example.com."
+  }
+
+  assert {
+    condition     = vra_cloud_account_nsxt.this.hostname == "nsxmgr01.example.com."
+    error_message = "A trailing-dot FQDN must be accepted as hostname."
+  }
 }
 
 run "empty_credentials_rejected" {

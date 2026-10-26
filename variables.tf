@@ -1,11 +1,6 @@
 variable "name" {
   type        = string
   description = "The name of the NSX-T cloud account"
-
-  validation {
-    condition     = length(trimspace(var.name)) > 0
-    error_message = "name must not be empty."
-  }
 }
 
 variable "username" {
@@ -31,11 +26,14 @@ variable "password" {
 
 variable "hostname" {
   type        = string
-  description = "The FQDN or IP address of the NSX-T manager, without a URL scheme, port, or path"
+  description = "The FQDN, IPv4 address, or IPv6 address (bare or bracketed) of the NSX-T manager, without a URL scheme, port, or path"
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$", var.hostname))
-    error_message = "hostname must be a bare FQDN or IP address, with no URL scheme, port, path, or whitespace."
+    condition = (
+      can(regex("^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?\\.?$", var.hostname))
+      || can(cidrhost("${try(regex("^\\[([0-9A-Fa-f:.]+)\\]$", var.hostname)[0], var.hostname)}/128", 0))
+    )
+    error_message = "hostname must be a bare FQDN, IPv4 address, or IPv6 address (bare or bracketed), with no URL scheme, port, path, or whitespace."
   }
 }
 
@@ -48,7 +46,7 @@ variable "accept_self_signed_cert" {
 variable "capability_tags" {
   type = list(object({
     key   = string
-    value = optional(string, "")
+    value = string
   }))
   description = "Capability tags to be applied to the Cloud Account"
   default     = []
@@ -56,11 +54,6 @@ variable "capability_tags" {
   validation {
     condition     = alltrue([for t in var.capability_tags : length(trimspace(t.key)) > 0])
     error_message = "Every capability tag must have a non-empty key."
-  }
-
-  validation {
-    condition     = length(distinct([for t in var.capability_tags : t.key])) == length(var.capability_tags)
-    error_message = "Capability tag keys must be unique."
   }
 }
 

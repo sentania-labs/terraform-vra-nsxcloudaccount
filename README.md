@@ -37,11 +37,11 @@ Set `accept_self_signed_cert = true` only for managers that present a self-signe
 
 ### Input validation
 
-`name`, `username`, and `password` must be non-empty, `hostname` must be a bare FQDN or IP (no scheme, port, or path), and `capability_tags` must be objects with a non-empty, unique `key` and an optional `value`. Malformed values fail at plan time. Validation messages never include the password.
+`username` and `password` must be non-empty, `hostname` must be a bare FQDN (trailing dot allowed) or an IPv4 or IPv6 address (IPv6 bare or bracketed) with no scheme, port, or path, and `capability_tags` must be objects with a non-empty `key` and a `value`. The same `key` may appear more than once with different values. Malformed values fail at plan time. Validation messages never include the password.
 
 ### Upgrading
 
-`accept_self_signed_cert` now defaults to `false`; consumers relying on a self-signed manager certificate must set it to `true` explicitly. `capability_tags` changed from `list(map(string))` to `list(object({ key = string, value = optional(string, "") }))`; extra keys on a tag are silently ignored, and a missing `key` fails at plan time.
+`accept_self_signed_cert` now defaults to `false`; consumers relying on a self-signed manager certificate must set it to `true` explicitly. `capability_tags` changed from `list(map(string))` to `list(object({ key = string, value = string }))`; extra keys on a tag are silently ignored, and a missing `key` or `value` fails at plan time.
 
 ## Tests
 
@@ -76,9 +76,9 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_accept_self_signed_cert"></a> [accept\_self\_signed\_cert](#input\_accept\_self\_signed\_cert) | Whether vRA should accept a self-signed or otherwise untrusted TLS certificate from the NSX-T manager. Defaults to false so the certificate is verified; set to true only for managers that present a certificate vRA does not trust, which leaves the connection open to impersonation. | `bool` | `false` | no |
-| <a name="input_capability_tags"></a> [capability\_tags](#input\_capability\_tags) | Capability tags to be applied to the Cloud Account | <pre>list(object({<br/>    key   = string<br/>    value = optional(string, "")<br/>  }))</pre> | `[]` | no |
+| <a name="input_capability_tags"></a> [capability\_tags](#input\_capability\_tags) | Capability tags to be applied to the Cloud Account | <pre>list(object({<br/>    key   = string<br/>    value = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_description"></a> [description](#input\_description) | A description for the cloud account | `string` | `""` | no |
-| <a name="input_hostname"></a> [hostname](#input\_hostname) | The FQDN or IP address of the NSX-T manager, without a URL scheme, port, or path | `string` | n/a | yes |
+| <a name="input_hostname"></a> [hostname](#input\_hostname) | The FQDN, IPv4 address, or IPv6 address (bare or bracketed) of the NSX-T manager, without a URL scheme, port, or path | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | The name of the NSX-T cloud account | `string` | n/a | yes |
 | <a name="input_password"></a> [password](#input\_password) | The password for the NSX-T service account | `string` | n/a | yes |
 | <a name="input_username"></a> [username](#input\_username) | The username for the NSX-T service account | `string` | n/a | yes |
