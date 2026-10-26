@@ -41,7 +41,7 @@ Set `accept_self_signed_cert = true` only for managers that present a self-signe
 
 ### Upgrading
 
-`accept_self_signed_cert` now defaults to `false`; consumers relying on a self-signed manager certificate must set it to `true` explicitly. `capability_tags` changed from `list(map(string))` to `list(object({ key = string, value = optional(string, "") }))`; maps with extra keys are no longer accepted.
+`accept_self_signed_cert` now defaults to `false`; consumers relying on a self-signed manager certificate must set it to `true` explicitly. `capability_tags` changed from `list(map(string))` to `list(object({ key = string, value = optional(string, "") }))`; extra keys on a tag are silently ignored, and a missing `key` fails at plan time.
 
 ## Tests
 
